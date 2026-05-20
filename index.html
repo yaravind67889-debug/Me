@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ramanuja Fundamentals — Student Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+/* ─────────────────────────────────────────────
+   RESET & TOKENS
+───────────────────────────────────────────── */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --ink:       #0d1117;
+  --ink2:      #2a2f45;
+  --surface:   #ffffff;
+  --muted:     #6b7280;
+  --border:    #e4e7f0;
+  --accent:    #1a3caa;
+  --accent2:   #2f59e8;
+  --gold:      #f5a623;
+  --gold2:     #fbbf24;
+  --danger:    #dc2626;
+  --dangerBg:  #fef2f2;
+  --success:   #15803d;
+  --successBg: #f0fdf4;
+  --infoBg:    #eff6ff;
+  --infoColor: #1d4ed8;
+  --radius:    16px;
+  --shadow:    0 20px 60px rgba(10,20,80,.14);
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  background: #0a1040;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ─── ANIMATED BACKGROUND ─── */
+.bg-art {
+  position: fixed; inset: 0; z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.bg-art::before {
+  content: '';
+  position: absolute;
+  width: 900px; height: 900px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(47,89,232,.22) 0%, transparent 70%);
+  top: -300px; left: -200px;
+  animation: driftA 18s ease-in-out infinite alternate;
+}
+.bg-art::after {
+  content: '';
+  position: absolute;
+  width: 700px; height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245,166,35,.12) 0%, transparent 70%);
+  bottom: -250px; right: -150px;
+  animation: driftB 22s ease-in-out infinite alternate;
+}
+@keyframes driftA {
+  from { transform: translate(0,0) scale(1); }
+  to   { transform: translate(60px,40px) scale(1.1); }
+}
+@keyframes driftB {
+  from { transform: translate(0,0) scale(1); }
+  to   { transform: translate(-40px,-60px) scale(1.08); }
+}
+
+/* dot grid */
+.dot-grid {
+  position: fixed; inset: 0; z-index: 0;
+  background-image: radial-gradient(rgba(255,255,255,.06) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+}
+
+/* ─── CARD ─── */
+.card {
+  position: relative; z-index: 10;
+  width: 100%; max-width: 980px;
+  min-height: 600px;
+  background: var(--surface);
+  border-radius: 28px;
+  display: flex;
+  overflow: hidden;
+  box-shadow: var(--shadow), 0 0 0 1px rgba(255,255,255,.06);
+  animation: riseIn .55s cubic-bezier(.22,.68,0,1.2) both;
+}
+@keyframes riseIn {
+  from { opacity:0; transform: translateY(36px) scale(.97); }
+  to   { opacity:1; transform: translateY(0) scale(1); }
+}
+
+/* ─── LEFT PANEL ─── */
+.panel-left {
+  width: 46%;
+  background: linear-gradient(155deg, #0d1f6e 0%, #1a3caa 50%, #2f59e8 100%);
+  padding: 56px 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+.panel-left::before {
+  content: '';
+  position: absolute;
+  width: 340px; height: 340px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.04);
+  top: -100px; right: -100px;
+}
+.panel-left::after {
+  content: '';
+  position: absolute;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.03);
+  bottom: 60px; left: -60px;
+}
+
+.brand { position: relative; z-index: 1; }
+.brand-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.12);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 40px;
+  padding: 6px 14px;
+  font-size: .75rem;
+  color: rgba(255,255,255,.9);
+  font-weight: 500;
+  letter-spacing: .03em;
+  margin-bottom: 28px;
+}
+.brand-badge span { font-size: .9rem; }
+
+.brand-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.6rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.15;
+  margin-bottom: 10px;
+}
+.brand-title em {
+  display: block;
+  font-style: normal;
+  background: linear-gradient(90deg, #f5a623, #fbbf24);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.brand-sub {
+  color: rgba(255,255,255,.72);
+  font-size: .9rem;
+  line-height: 1.7;
+  margin-bottom: 40px;
+  max-width: 300px;
+}
+
+.features-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative; z-index: 1;
+}
+.features-list li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 14px;
+  padding: 14px 18px;
+  color: rgba(255,255,255,.9);
+  font-size: .86rem;
+  font-weight: 500;
+  backdrop-filter: blur(4px);
+  transition: background .2s;
+}
+.features-list li:hover { background: rgba(255,255,255,.13); }
+.feat-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: rgba(255,255,255,.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.panel-footer {
+  position: relative; z-index: 1;
+  color: rgba(255,255,255,.4);
+  font-size: .74rem;
+  margin-top: 36px;
+}
+
+/* ─── RIGHT PANEL ─── */
+.panel-right {
+  flex: 1;
+  padding: 52px 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow-y: auto;
+}
+
+.panel-right-header {
+  margin-bottom: 32px;
+}
+.portal-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--infoBg);
+  color: var(--infoColor);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: .73rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.portal-tag svg { flex-shrink: 0; }
+.panel-right-header h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.95rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.2;
+}
+.panel-right-header p {
+  color: var(--muted);
+  font-size: .87rem;
+  margin-top: 6px;
+}
+
+/* DB status */
+.db-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #f6f8ff;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: .73rem;
+  color: var(--muted);
+  margin-top: 10px;
+}
+.db-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #d1d5db;
+  transition: background .3s, box-shadow .3s;
+}
+.db-dot.live  { background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.2); }
+.db-dot.error { background: var(--danger); }
+
+/* ─── TABS ─── */
+.tabs {
+  display: flex;
+  background: #f3f5fb;
+  border-radius: 14px;
+  padding: 5px;
+  margin-bottom: 28px;
+  gap: 4px;
+}
+.tab-btn {
+  flex: 1;
+  padding: 11px;
+  border: none; border-radius: 11px;
+  cursor: pointer; background: transparent;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600; font-size: .88rem;
+  color: var(--muted);
+  transition: all .25s;
+}
+.tab-btn.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(26,60,170,.35);
+}
+
+/* ─── FORM ─── */
+.form-panel { display: none; }
+.form-panel.active {
+  display: block;
+  animation: formIn .35s ease both;
+}
+@keyframes formIn {
+  from { opacity:0; transform: translateY(12px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+.field { margin-bottom: 18px; }
+.field label {
+  display: block;
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--ink2);
+  margin-bottom: 7px;
+  letter-spacing: .01em;
+}
+
+/* input group with icon */
+.input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.input-icon {
+  position: absolute;
+  left: 14px;
+  color: #9ca3af;
+  display: flex; align-items: center;
+  pointer-events: none;
+  transition: color .2s;
+}
+.input-group:focus-within .input-icon { color: var(--accent); }
+
+.input-group input {
+  width: 100%;
+  padding: 13px 16px 13px 42px;
+  border: 2px solid var(--border);
+  background: #fafbff;
+  border-radius: 13px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .93rem;
+  color: var(--ink);
+  outline: none;
+  transition: all .22s;
+}
+.input-group input:focus {
+  border-color: var(--accent);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(26,60,170,.08);
+}
+.input-group input.error {
+  border-color: var(--danger);
+  background: var(--dangerBg);
+}
+.input-group input::placeholder { color: #c0c5d6; }
+
+/* password toggle */
+.pw-toggle {
+  position: absolute; right: 14px;
+  background: none; border: none;
+  cursor: pointer; color: #9ca3af;
+  display: flex; align-items: center;
+  transition: color .2s;
+}
+.pw-toggle:hover { color: var(--accent); }
+
+/* password strength */
+.pw-strength {
+  margin-top: 8px;
+  display: none;
+}
+.pw-strength.show { display: block; }
+.strength-bar {
+  height: 4px;
+  border-radius: 4px;
+  background: #e5e7eb;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.strength-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width .3s, background .3s;
+}
+.strength-text {
+  font-size: .74rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+/* password requirements */
+.pw-reqs {
+  margin-top: 8px;
+  display: none;
+}
+.pw-reqs.show { display: flex; flex-wrap: wrap; gap: 6px; }
+.req-chip {
+  display: flex; align-items: center; gap: 4px;
+  font-size: .72rem;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: #f3f5fb;
+  color: var(--muted);
+  transition: all .2s;
+}
+.req-chip.met {
+  background: var(--successBg);
+  color: var(--success);
+}
+.req-chip svg { flex-shrink: 0; }
+
+/* forgot password */
+.forgot-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -10px;
+  margin-bottom: 18px;
+}
+.forgot-link {
+  font-size: .78rem;
+  color: var(--accent2);
+  text-decoration: none;
+  font-weight: 500;
+  cursor: pointer;
+  background: none; border: none;
+  transition: color .2s;
+}
+.forgot-link:hover { color: var(--accent); text-decoration: underline; }
+
+/* ─── ALERTS ─── */
+.alert {
+  display: none;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: .84rem;
+  font-weight: 500;
+  margin-bottom: 16px;
+  line-height: 1.5;
+  animation: formIn .3s ease;
+}
+.alert.show { display: flex; align-items: flex-start; gap: 10px; }
+.alert svg  { flex-shrink: 0; margin-top: 1px; }
+.alert-error   { background: var(--dangerBg); color: var(--danger); border: 1px solid #fecaca; }
+.alert-success { background: var(--successBg); color: var(--success); border: 1px solid #bbf7d0; }
+.alert-info    { background: var(--infoBg); color: var(--infoColor); border: 1px solid #bfdbfe; }
+
+/* ─── PRIMARY BUTTON ─── */
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  border: none; border-radius: 13px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .97rem; font-weight: 700;
+  cursor: pointer;
+  transition: all .25s;
+  box-shadow: 0 5px 18px rgba(26,60,170,.32);
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-primary::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,.1);
+  opacity: 0; transition: opacity .2s;
+}
+.btn-primary:hover:not(:disabled)::after { opacity: 1; }
+.btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(26,60,170,.42); }
+.btn-primary:active:not(:disabled) { transform: translateY(0); }
+.btn-primary:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+
+/* spinner */
+.spin {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spinning .65s linear infinite;
+}
+@keyframes spinning { to { transform: rotate(360deg); } }
+
+/* divider */
+.divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 22px 0;
+  color: var(--muted); font-size: .78rem;
+}
+.divider::before, .divider::after {
+  content: ''; flex: 1;
+  height: 1px; background: var(--border);
+}
+
+/* ─── TERMS ─── */
+.terms {
+  font-size: .75rem;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 14px;
+  line-height: 1.6;
+}
+.terms a { color: var(--accent2); text-decoration: none; }
+.terms a:hover { text-decoration: underline; }
+
+/* ─── WELCOME SCREEN ─── */
+.welcome-panel {
+  display: none;
+  text-align: center;
+  padding: 20px 10px;
+  animation: popIn .5s cubic-bezier(.22,.68,0,1.2) both;
+}
+@keyframes popIn {
+  from { opacity:0; transform: scale(.82); }
+  to   { opacity:1; transform: scale(1); }
+}
+.welcome-circle {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto 18px;
+  box-shadow: 0 8px 28px rgba(26,60,170,.3);
+  animation: floatBob 3s ease-in-out infinite;
+}
+@keyframes floatBob {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+.welcome-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.welcome-email-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--infoBg);
+  border: 1px solid #bfdbfe;
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: .78rem;
+  color: var(--infoColor);
+  font-weight: 500;
+  margin-bottom: 14px;
+}
+.welcome-msg {
+  color: var(--muted);
+  font-size: .9rem;
+  line-height: 1.7;
+  max-width: 340px;
+  margin: 0 auto 24px;
+}
+.welcome-name { color: var(--accent); font-weight: 700; }
+.btn-back {
+  padding: 11px 28px;
+  background: var(--accent);
+  color: #fff; border: none;
+  border-radius: 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600; font-size: .9rem;
+  cursor: pointer;
+  transition: background .2s;
+}
+.btn-back:hover { background: var(--accent2); }
+
+/* ─── FORGOT PASSWORD PANEL ─── */
+.forgot-panel {
+  display: none;
+  animation: formIn .35s ease both;
+}
+.forgot-panel.show { display: block; }
+.back-btn {
+  background: none; border: none; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--accent2); font-size: .84rem; font-weight: 500;
+  margin-bottom: 20px;
+  padding: 0;
+  font-family: 'DM Sans', sans-serif;
+  transition: color .2s;
+}
+.back-btn:hover { color: var(--accent); }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 820px) {
+  .panel-left { display: none; }
+  .panel-right { padding: 40px 32px; }
+}
+@media (max-width: 480px) {
+  body { padding: 16px; }
+  .panel-right { padding: 32px 24px; }
+  .brand-title { font-size: 2rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-art"></div>
+<div class="dot-grid"></div>
+
+<div class="card">
+
+  <!-- ══════════ LEFT PANEL ══════════ -->
+  <div class="panel-left">
+    <div class="brand">
+      <div class="brand-badge">
+        <span>📘</span> Est. Excellence in Education
+      </div>
+      <h1 class="brand-title">
+        Ramanuja
+        <em>Fundamentals</em>
+      </h1>
+      <p class="brand-sub">
+        Premium coaching for EAMCET, TG POLYCET, Olympiads &amp; School Tuitions. Your success journey starts here.
+      </p>
+
+      <ul class="features-list">
+        <li>
+          <div class="feat-icon">🏆</div>
+          EAMCET &amp; POLYCET Coaching
+        </li>
+        <li>
+          <div class="feat-icon">🎯</div>
+          Olympiad Preparation
+        </li>
+        <li>
+          <div class="feat-icon">📊</div>
+          Personalized Progress Tracking
+        </li>
+        <li>
+          <div class="feat-icon">👨‍🏫</div>
+          Expert Faculty &amp; Live Sessions
+        </li>
+      </ul>
+    </div>
+
+    <div class="panel-footer">
+      © 2025 Ramanuja Fundamentals · All rights reserved
+    </div>
+  </div>
+
+  <!-- ══════════ RIGHT PANEL ══════════ -->
+  <div class="panel-right">
+
+    <!-- Header -->
+    <div class="panel-right-header">
+      <div class="portal-tag">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="5"/></svg>
+        Student Portal
+      </div>
+      <h2 id="panelHeading">Welcome back</h2>
+      <p id="panelSubheading">Sign in to continue your learning journey.</p>
+      <div class="db-pill">
+        <div class="db-dot" id="dbDot"></div>
+        <span id="dbStatus">Connecting…</span>
+      </div>
+    </div>
+
+    <!-- Tabs (hidden in forgot-password view) -->
+    <div class="tabs" id="mainTabs">
+      <button class="tab-btn active" id="tabSignIn" onclick="switchTab('signin')">Sign In</button>
+      <button class="tab-btn"        id="tabSignUp" onclick="switchTab('signup')">Sign Up</button>
+    </div>
+
+    <!-- ─── SIGN IN FORM ─── -->
+    <div class="form-panel active" id="signinForm">
+
+      <div class="alert alert-error"   id="siError">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+        <span id="siErrorMsg"></span>
+      </div>
+      <div class="alert alert-success" id="siSuccess">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+        <span id="siSuccessMsg"></span>
+      </div>
+
+      <div class="field">
+        <label for="siEmailInput">Gmail Address</label>
+        <div class="input-group">
+          <span class="input-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </span>
+          <input type="email" id="siEmailInput" placeholder="yourname@gmail.com" autocomplete="email" autocapitalize="none">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="siPasswordInput">Password</label>
+        <div class="input-group">
+          <span class="input-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </span>
+          <input type="password" id="siPasswordInput" placeholder="Enter your password" autocomplete="current-password">
+          <button class="pw-toggle" type="button" onclick="togglePw('siPasswordInput', this)" aria-label="Toggle password visibility">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="forgot-row">
+        <button class="forgot-link" onclick="showForgot()">Forgot password?</button>
+      </div>
+
+      <button class="btn-primary" id="siSubmitBtn" onclick="doSignIn()">
+        Sign In
+      </button>
+
+      <p class="terms">
+        By signing in you agree to our <a href="#">Terms of Service</a> &amp; <a href="#">Privacy Policy</a>.
+      </p>
+    </div>
+
+    <!-- ─── SIGN UP FORM ─── -->
+    <div class="form-panel" id="signupForm">
+
+      <div class="alert alert-error"   id="suError">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+        <span id="suErrorMsg"></span>
+      </div>
+      <div class="alert alert-info"    id="suInfo">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+        <span id="suInfoMsg"></span>
+      </div>
+
+      <div class="field">
+        <label for="suNameInput">Full Name</label>
+        <div class="input-group">
+          <span class="input-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </span>
+          <input type="text" id="suNameInput" placeholder="Enter your full name" autocomplete="name">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="suEmailInput">Gmail Address</label>
+        <div class="input-group">
+          <span class="input-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </span>
+          <input type="email" id="suEmailInput" placeholder="yourname@gmail.com" autocomplete="email" autocapitalize="none">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="suPasswordInput">Create Password</label>
+        <div class="input-group">
+          <span class="input-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </span>
+          <input type="password" id="suPasswordInput" placeholder="Min. 8 characters" autocomplete="new-password"
+                 oninput="checkStrength(this.value)">
+          <button class="pw-toggle" type="button" onclick="togglePw('suPasswordInput', this)" aria-label="Toggle password">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div class="pw-strength" id="pwStrength">
+          <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+          <span class="strength-text" id="strengthText"></span>
+        </div>
+        <div class="pw-reqs" id="pwReqs">
+          <div class="req-chip" id="req8"><svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"><circle cx="6" cy="6" r="6"/></svg>8+ chars</div>
+          <div class="req-chip" id="reqUpper"><svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"><circle cx="6" cy="6" r="6"/></svg>Uppercase</div>
+          <div class="req-chip" id="reqLower"><svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"><circle cx="6" cy="6" r="6"/></svg>Lowercase</div>
+          <div class="req-chip" id="reqNum"><svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"><circle cx="6" cy="6" r="6"/></svg>Number</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="suConfirmInput">Confirm Password</label>
+        <div class="input-group">
+          <span class="input-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          </span>
+          <input type="password" id="suConfirmInput" placeholder="Re-enter your password" autocomplete="new-password">
+          <button class="pw-toggle" type="button" onclick="togglePw('suConfirmInput', this)" aria-label="Toggle confirm password">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="suSubmitBtn" onclick="doSignUp()">
+        Create Account
+      </button>
+
+      <p class="terms">
+        By creating an account you agree to our <a href="#">Terms</a> &amp; <a href="#">Privacy Policy</a>.
+      </p>
+    </div>
+
+    <!-- ─── FORGOT PASSWORD ─── -->
+    <div class="forgot-panel" id="forgotPanel">
+      <button class="back-btn" onclick="hideForgot()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Back to Sign In
+      </button>
+      <h3 style="font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--ink);margin-bottom:6px;">Reset Password</h3>
+      <p style="color:var(--muted);font-size:.85rem;margin-bottom:20px;line-height:1.6;">
+        Enter your Gmail address and we'll send you a password reset link.
+      </p>
+
+      <div class="alert alert-error"   id="fpError">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+        <span id="fpErrorMsg"></span>
+      </div>
+      <div class="alert alert-success" id="fpSuccess">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+        <span id="fpSuccessMsg"></span>
+      </div>
+
+      <div class="field">
+        <label for="fpEmailInput">Gmail Address</label>
+        <div class="input-group">
+          <span class="input-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </span>
+          <input type="email" id="fpEmailInput" placeholder="yourname@gmail.com" autocapitalize="none">
+        </div>
+      </div>
+
+      <button class="btn-primary" id="fpSubmitBtn" onclick="doForgotPassword()">
+        Send Reset Link
+      </button>
+    </div>
+
+    <!-- ─── WELCOME SCREEN ─── -->
+    <div class="welcome-panel" id="welcomePanel">
+      <div class="welcome-circle" id="welcomeEmoji">🎓</div>
+      <h2 class="welcome-title" id="welcomeTitle">Welcome aboard!</h2>
+      <div class="welcome-email-badge" id="welcomeEmailBadge">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        <span id="welcomeEmailText"></span>
+      </div>
+      <p class="welcome-msg" id="welcomeMsg"></p>
+      <button class="btn-back" onclick="resetAll()">← Back to Sign In</button>
+    </div>
+
+  </div><!-- /panel-right -->
+</div><!-- /card -->
+
+<script>
+/* ════════════════════════════════════════════
+   SUPABASE INIT
+═══════════════════════════════════════════ */
+const SUPABASE_URL = 'https://hdzdvzdzdueiniasicsi.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_dvL75XMh2ZWmTTJo2EXPOQ_8Wwp2mRr';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* DB connection test */
+(async () => {
+  const dot    = document.getElementById('dbDot');
+  const status = document.getElementById('dbStatus');
+  try {
+    const { error } = await db.from('students').select('id').limit(1);
+    if (error && !['PGRST116','42P01'].includes(error.code)) throw error;
+    dot.classList.add('live');
+    status.textContent = 'Database connected';
+  } catch (e) {
+    dot.classList.add('error');
+    status.textContent = 'DB connection error';
+    console.warn('Supabase error:', e);
+  }
+})();
+
+/* ════════════════════════════════════════════
+   UI HELPERS
+═══════════════════════════════════════════ */
+function switchTab(tab) {
+  ['signin','signup'].forEach(t => {
+    document.getElementById('tab' + (t === 'signin' ? 'SignIn' : 'SignUp'))
+      .classList.toggle('active', t === tab);
+    document.getElementById(t + 'Form')
+      .classList.toggle('active', t === tab);
+  });
+  hideAlert('siError'); hideAlert('siSuccess');
+  hideAlert('suError'); hideAlert('suInfo');
+  document.getElementById('panelHeading').textContent    = tab === 'signin' ? 'Welcome back' : 'Create account';
+  document.getElementById('panelSubheading').textContent = tab === 'signin'
+    ? 'Sign in to continue your learning journey.'
+    : 'Join thousands of students achieving their dreams.';
+  document.getElementById('mainTabs').style.display = 'flex';
+  document.getElementById('forgotPanel').classList.remove('show');
+  document.getElementById('welcomePanel').style.display = 'none';
+}
+
+function showAlert(id, msg) {
+  const el  = document.getElementById(id);
+  const msg_el = document.getElementById(id + 'Msg');
+  if (msg_el) msg_el.textContent = msg;
+  el.classList.add('show');
+}
+function hideAlert(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('show');
+}
+
+function setLoading(btnId, loading, defaultText) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = loading;
+  btn.innerHTML = loading
+    ? '<div class="spin"></div> Please wait…'
+    : defaultText;
+}
+
+function togglePw(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  const isText = inp.type === 'text';
+  inp.type = isText ? 'password' : 'text';
+  btn.innerHTML = isText
+    ? `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`
+    : `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+}
+
+/* ════════════════════════════════════════════
+   PASSWORD STRENGTH
+═══════════════════════════════════════════ */
+function checkStrength(pw) {
+  const strEl    = document.getElementById('pwStrength');
+  const fillEl   = document.getElementById('strengthFill');
+  const textEl   = document.getElementById('strengthText');
+  const reqsEl   = document.getElementById('pwReqs');
+
+  if (!pw) {
+    strEl.classList.remove('show');
+    reqsEl.classList.remove('show');
+    return;
+  }
+  strEl.classList.add('show');
+  reqsEl.classList.add('show');
+
+  const has8    = pw.length >= 8;
+  const hasU    = /[A-Z]/.test(pw);
+  const hasL    = /[a-z]/.test(pw);
+  const hasN    = /[0-9]/.test(pw);
+  const hasSp   = /[^A-Za-z0-9]/.test(pw);
+
+  document.getElementById('req8').classList.toggle('met', has8);
+  document.getElementById('reqUpper').classList.toggle('met', hasU);
+  document.getElementById('reqLower').classList.toggle('met', hasL);
+  document.getElementById('reqNum').classList.toggle('met', hasN);
+
+  const score = [has8, hasU, hasL, hasN, hasSp].filter(Boolean).length;
+  const levels = [
+    { w:'20%', bg:'#ef4444', label:'Very Weak' },
+    { w:'40%', bg:'#f97316', label:'Weak' },
+    { w:'60%', bg:'#eab308', label:'Fair' },
+    { w:'80%', bg:'#22c55e', label:'Strong' },
+    { w:'100%',bg:'#15803d', label:'Very Strong' },
+  ];
+  const lvl = levels[Math.max(0, score - 1)];
+  fillEl.style.width      = lvl.w;
+  fillEl.style.background = lvl.bg;
+  textEl.textContent      = lvl.label;
+  textEl.style.color      = lvl.bg;
+}
+
+/* ════════════════════════════════════════════
+   VALIDATION
+═══════════════════════════════════════════ */
+function isGmail(email) {
+  return /^[^\s@]+@gmail\.com$/i.test(email.trim());
+}
+
+/* ════════════════════════════════════════════
+   SIGN IN
+═══════════════════════════════════════════ */
+async function doSignIn() {
+  hideAlert('siError'); hideAlert('siSuccess');
+  const email = document.getElementById('siEmailInput').value.trim();
+  const pw    = document.getElementById('siPasswordInput').value;
+
+  if (!email)          { showAlert('siError', '✗ Please enter your Gmail address.'); return; }
+  if (!isGmail(email)) { showAlert('siError', '✗ Please enter a valid @gmail.com address.'); return; }
+  if (!pw)             { showAlert('siError', '✗ Please enter your password.'); return; }
+
+  setLoading('siSubmitBtn', true, 'Sign In');
+  try {
+    const { data, error } = await db.auth.signInWithPassword({ email, password: pw });
+    if (error) throw error;
+
+    /* Update last_login & login_count in students table */
+    const user = data.user;
+    const { data: student } = await db
+      .from('students')
+      .select('login_count, name')
+      .eq('auth_id', user.id)
+      .single();
+
+    if (student) {
+      await db.from('students').update({
+        last_login:  new Date().toISOString(),
+        login_count: (student.login_count || 0) + 1
+      }).eq('auth_id', user.id);
+    }
+
+    setLoading('siSubmitBtn', false, 'Sign In');
+    showWelcomeScreen(student?.name || user.email.split('@')[0], email, 'signin');
+
+  } catch (e) {
+    setLoading('siSubmitBtn', false, 'Sign In');
+    const msg = e.message || 'Unknown error';
+    if (msg.toLowerCase().includes('invalid login')) {
+      showAlert('siError', '✗ Incorrect email or password. Please try again.');
+    } else if (msg.toLowerCase().includes('email not confirmed')) {
+      showAlert('siError', '✗ Please confirm your email. Check your Gmail inbox for a confirmation link.');
+    } else {
+      showAlert('siError', '✗ ' + msg);
+    }
+  }
+}
+
+/* ════════════════════════════════════════════
+   SIGN UP
+═══════════════════════════════════════════ */
+async function doSignUp() {
+  hideAlert('suError'); hideAlert('suInfo');
+  const name    = document.getElementById('suNameInput').value.trim();
+  const email   = document.getElementById('suEmailInput').value.trim();
+  const pw      = document.getElementById('suPasswordInput').value;
+  const confirm = document.getElementById('suConfirmInput').value;
+
+  if (!name)             { showAlert('suError', '✗ Please enter your full name.'); return; }
+  if (!email)            { showAlert('suError', '✗ Please enter your Gmail address.'); return; }
+  if (!isGmail(email))   { showAlert('suError', '✗ Please enter a valid @gmail.com address.'); return; }
+  if (pw.length < 8)     { showAlert('suError', '✗ Password must be at least 8 characters.'); return; }
+  if (pw !== confirm)    { showAlert('suError', '✗ Passwords do not match.'); return; }
+
+  setLoading('suSubmitBtn', true, 'Create Account');
+  try {
+    /* Create auth user */
+    const { data, error } = await db.auth.signUp({
+      email,
+      password: pw,
+      options: { data: { full_name: name } }
+    });
+
+    /* Handle Supabase auth errors */
+    if (error) {
+      const m = error.message || '';
+      if (m.toLowerCase().includes('already registered') || m.toLowerCase().includes('already exists')) {
+        throw new Error('This Gmail is already registered. Please Sign In instead.');
+      }
+      throw error;
+    }
+
+    /* ── Save to students table ──
+       data.user may be non-null even when email confirmation is required.
+       We use data.user?.id safely; if null we store without auth_id for now. */
+    const userId = data?.user?.id || null;
+
+    const insertPayload = {
+      name:        name,
+      email:       email.toLowerCase(),
+      created_at:  new Date().toISOString(),
+      last_login:  new Date().toISOString(),
+      login_count: 1
+    };
+    if (userId) insertPayload.auth_id = userId;
+
+    const { error: dbErr } = await db.from('students').insert(insertPayload);
+
+    if (dbErr) {
+      /* Duplicate email in students table is fine – account already partially exists */
+      if (!dbErr.message?.toLowerCase().includes('duplicate') &&
+          !dbErr.message?.toLowerCase().includes('unique')) {
+        console.warn('students insert warning:', dbErr.message);
+      }
+    }
+
+    setLoading('suSubmitBtn', false, 'Create Account');
+
+    /* ── Show result ──
+       If data.session exists → email confirmation is OFF → user is active now.
+       If data.session is null → confirmation email was sent to Gmail.        */
+    if (data?.session) {
+      showWelcomeScreen(name, email, 'signup');
+    } else {
+      /* Show a friendly confirmation-pending message */
+      hideAlert('suError');
+      const infoEl = document.getElementById('suInfo');
+      const msgEl  = document.getElementById('suInfoMsg');
+      msgEl.innerHTML =
+        `<strong>Account created! 🎉</strong><br>` +
+        `A confirmation link has been sent to <strong>${email}</strong>.<br>` +
+        `Please check your Gmail inbox (and spam folder) and click the link to activate your account.`;
+      infoEl.classList.add('show');
+    }
+
+  } catch (e) {
+    setLoading('suSubmitBtn', false, 'Create Account');
+    showAlert('suError', '✗ ' + (e.message || 'Something went wrong. Please try again.'));
+  }
+}
+
+/* ════════════════════════════════════════════
+   FORGOT PASSWORD
+═══════════════════════════════════════════ */
+function showForgot() {
+  document.getElementById('mainTabs').style.display = 'none';
+  document.getElementById('signinForm').classList.remove('active');
+  document.getElementById('signupForm').classList.remove('active');
+  document.getElementById('panelHeading').textContent    = 'Forgot Password';
+  document.getElementById('panelSubheading').textContent = 'We\'ll email you a reset link.';
+  document.getElementById('forgotPanel').classList.add('show');
+  hideAlert('fpError'); hideAlert('fpSuccess');
+  document.getElementById('fpEmailInput').value = document.getElementById('siEmailInput').value;
+}
+
+function hideForgot() {
+  document.getElementById('forgotPanel').classList.remove('show');
+  switchTab('signin');
+}
+
+async function doForgotPassword() {
+  hideAlert('fpError'); hideAlert('fpSuccess');
+  const email = document.getElementById('fpEmailInput').value.trim();
+  if (!isGmail(email)) { showAlert('fpError', '✗ Please enter a valid @gmail.com address.'); return; }
+
+  setLoading('fpSubmitBtn', true, 'Send Reset Link');
+  try {
+    const { error } = await db.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.href
+    });
+    if (error) throw error;
+    setLoading('fpSubmitBtn', false, 'Send Reset Link');
+    showAlert('fpSuccess', '✓ Password reset link sent! Check your Gmail inbox (and spam folder).');
+  } catch (e) {
+    setLoading('fpSubmitBtn', false, 'Send Reset Link');
+    showAlert('fpError', '✗ ' + (e.message || 'Failed to send reset email.'));
+  }
+}
+
+/* ════════════════════════════════════════════
+   WELCOME SCREEN → REDIRECT TO DASHBOARD
+═══════════════════════════════════════════ */
+function showWelcomeScreen(name, email, type) {
+  ['signinForm','signupForm'].forEach(id =>
+    document.getElementById(id).classList.remove('active'));
+  document.getElementById('mainTabs').style.display    = 'none';
+  document.getElementById('forgotPanel').classList.remove('show');
+  document.getElementById('panelHeading').style.display    = 'none';
+  document.getElementById('panelSubheading').style.display = 'none';
+  document.querySelector('.db-pill').style.display         = 'none';
+  document.querySelector('.portal-tag').style.display      = 'none';
+
+  const wp = document.getElementById('welcomePanel');
+  wp.style.display = 'block';
+
+  document.getElementById('welcomeEmoji').textContent     = type === 'signup' ? '🎉' : '👋';
+  document.getElementById('welcomeTitle').textContent     = type === 'signup' ? 'Account Created!' : 'Welcome Back!';
+  document.getElementById('welcomeEmailText').textContent = email;
+  document.getElementById('welcomeMsg').innerHTML =
+    `Hello, <span class="welcome-name">${name}</span>!<br>` +
+    (type === 'signup'
+      ? 'Your account has been created. Redirecting you to TG Polycet Portal…'
+      : 'Signed in successfully. Taking you to the TG Polycet Portal…');
+
+  /* ── Redirect to dashboard after 2 seconds ── */
+  setTimeout(() => {
+    const params = new URLSearchParams({
+      name: name,
+      type: type
+    });
+    window.location.href = 'tg_polycet.html?' + params.toString();
+  }, 2000);
+}
+
+function resetAll() {
+  document.getElementById('welcomePanel').style.display = 'none';
+  document.getElementById('panelHeading').style.display    = '';
+  document.getElementById('panelSubheading').style.display = '';
+  document.querySelector('.db-pill').style.display         = '';
+  document.querySelector('.portal-tag').style.display      = '';
+
+  // Clear fields
+  ['siEmailInput','siPasswordInput','suNameInput','suEmailInput','suPasswordInput','suConfirmInput','fpEmailInput']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+
+  document.getElementById('pwStrength').classList.remove('show');
+  document.getElementById('pwReqs').classList.remove('show');
+  checkStrength('');
+
+  switchTab('signin');
+  document.getElementById('mainTabs').style.display = 'flex';
+}
+
+/* ════════════════════════════════════════════
+   ENTER KEY SUPPORT
+═══════════════════════════════════════════ */
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const active = document.querySelector('.form-panel.active');
+  if (active?.id === 'signinForm') doSignIn();
+  else if (active?.id === 'signupForm') doSignUp();
+  else if (document.getElementById('forgotPanel').classList.contains('show')) doForgotPassword();
+});
+</script>
+</body>
+</html>
